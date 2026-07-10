@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     # AI
     GEMINI_API_KEY: str = ""
 
+    # Clerk
+    CLERK_SECRET_KEY: str = ""
+    CLERK_PUBLISHABLE_KEY: str = ""
+    CLERK_JWT_ISSUER: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True
