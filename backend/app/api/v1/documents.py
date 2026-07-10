@@ -21,6 +21,16 @@ async def upload_document(
     return document_service.upload_document(db, current_user.id, file)
 
 
+@router.post("/{document_id}/process", response_model=DocumentResponse)
+async def process_document(
+    document_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    document_service: DocumentService = Depends(get_document_service),
+):
+    return document_service.process_document(db, document_id, current_user.id)
+
+
 @router.get("", response_model=List[DocumentResponse])
 async def get_documents(
     skip: int = Query(0, ge=0),

@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Upload, Trash2, FileText } from "lucide-react"
+import { Upload, Trash2, FileText, Cpu } from "lucide-react"
 import { Document } from "@/types"
 import { useApi } from "@/hooks/useApi"
 
@@ -53,6 +53,7 @@ export default function DocumentsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
   const { fetchApi } = useApi()
 
   async function loadDocuments() {
@@ -93,6 +94,26 @@ export default function DocumentsPage() {
     } finally {
       setIsUploading(false)
       e.target.value = ""
+    }
+  }
+
+  async function handleProcess(documentId: string) {
+    try {
+      setError(null)
+      setProcessingIds((prev) => new Set(prev).add(documentId))
+      await fetchApi(`/api/v1/documents/${documentId}/process`, {
+        method: "POST",
+      })
+      await loadDocuments()
+    } catch (err) {
+      setError("Failed to process document")
+      console.error(err)
+    } finally {
+      setProcessingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(documentId)
+        return next
+      })
     }
   }
 
@@ -158,6 +179,9 @@ export default function DocumentsPage() {
               <TableRow>
                 <TableHead>Filename</TableHead>
                 <TableHead>Size</TableHead>
+                <TableHead>Pages</TableHead>
+                <TableHead>Words</TableHead>
+                <TableHead>Characters</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Upload Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -170,13 +194,30 @@ export default function DocumentsPage() {
                     {doc.original_filename}
                   </TableCell>
                   <TableCell>{formatFileSize(doc.file_size)}</TableCell>
+                  <TableCell>{doc.page_count ?? "-"}</TableCell>
+                  <TableCell>{doc.word_count ?? "-"}</TableCell>
+                  <TableCell>{doc.character_count ?? "-"}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(doc.processing_status)}>
                       {doc.processing_status}
                     </Badge>
                   </TableCell>
                   <TableCell>{formatDate(doc.created_at)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex gap-2 justify-end">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleProcess(doc.id)}
+                      disabled={
+                        doc.processing_status === "processing" ||
+                        doc.processing_status === "ready" ||
+                        processingIds.has(doc.id)
+                      }
+                      className="flex items-center gap-1"
+                    >
+                      <Cpu className="h-3 w-3" />
+                      {processingIds.has(doc.id) ? "Processing..." : "Process"}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"

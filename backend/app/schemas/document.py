@@ -11,6 +11,11 @@ class DocumentBase(BaseModel):
     mime_type: str
     storage_path: str
     processing_status: ProcessingStatus = ProcessingStatus.UPLOADED
+    page_count: Optional[int] = None
+    word_count: Optional[int] = None
+    character_count: Optional[int] = None
+    extracted_text: Optional[str] = None
+    processed_at: Optional[datetime] = None
 
 
 class DocumentCreate(DocumentBase):
@@ -20,6 +25,11 @@ class DocumentCreate(DocumentBase):
 class DocumentUpdate(BaseModel):
     filename: Optional[str] = None
     processing_status: Optional[ProcessingStatus] = None
+    page_count: Optional[int] = None
+    word_count: Optional[int] = None
+    character_count: Optional[int] = None
+    extracted_text: Optional[str] = None
+    processed_at: Optional[datetime] = None
 
 
 class DocumentResponse(DocumentBase):

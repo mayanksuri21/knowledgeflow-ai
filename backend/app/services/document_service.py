@@ -1,12 +1,14 @@
 import os
 import uuid
 from typing import Optional, List, BinaryIO
+from datetime import datetime, UTC
 from fastapi import UploadFile, HTTPException, status
 from sqlalchemy.orm import Session
 from . import get_document_repository, DocumentRepository
+from .pdf import PDFService
 from ..storage import StorageInterface, get_storage
 from ..models.document import ProcessingStatus, Document
-from ..schemas.document import DocumentCreate, DocumentResponse
+from ..schemas.document import DocumentCreate, DocumentUpdate, DocumentResponse
 from ..core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -58,6 +60,57 @@ class DocumentService:
         )
         doc = self.document_repo.create(db, doc_create.model_dump())
         logger.info(f"Document uploaded: {doc.id} by user {user_id}")
+        return DocumentResponse.model_validate(doc)
+
+    def process_document(
+        self,
+        db: Session,
+        document_id: str,
+        user_id: str,
+    ) -> DocumentResponse:
+        doc = self.document_repo.get_by_id_and_user(db, document_id, user_id)
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found",
+            )
+        if doc.processing_status == ProcessingStatus.PROCESSING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Document is already being processed",
+            )
+        # Update status to processing
+        doc.processing_status = ProcessingStatus.PROCESSING
+        db.commit()
+        db.refresh(doc)
+
+        try:
+            # Extract text using PDFService
+            extracted_text, page_count, word_count, character_count = PDFService.extract_text_from_pdf(
+                doc.storage_path
+            )
+            # Update document with results
+            doc_update = DocumentUpdate(
+                processing_status=ProcessingStatus.READY,
+                extracted_text=extracted_text,
+                page_count=page_count,
+                word_count=word_count,
+                character_count=character_count,
+                processed_at=datetime.now(UTC),
+            )
+            for key, value in doc_update.model_dump(exclude_unset=True).items():
+                setattr(doc, key, value)
+            db.commit()
+            db.refresh(doc)
+            logger.info(f"Document processed successfully: {doc.id}")
+        except Exception as e:
+            logger.error(f"Failed to process document {doc.id}: {e}")
+            doc.processing_status = ProcessingStatus.FAILED
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to process document",
+            )
         return DocumentResponse.model_validate(doc)
 
     def get_user_documents(
