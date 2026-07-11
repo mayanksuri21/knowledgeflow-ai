@@ -1,5 +1,5 @@
 from .gemini_provider import AIProvider, GeminiProvider
-from ...core.config import get_settings
+from ....core.config import get_settings
 
 
 def get_ai_provider() -> AIProvider:

@@ -21,9 +21,10 @@ class AIService:
 
     def generate_response(self, db: Session, query: str, document_id: str) -> Dict[str, Any]:
         logger.info("Generating AI response", document_id=document_id, query=query)
-        context = self.context_provider.get_context(db, document_id)
+        context, citations = self.context_provider.get_context(db, document_id, query)
         if not context:
             raise ValueError("No document context available")
         prompt = self.prompt_builder.build_prompt(query, context)
         response = self.ai_provider.generate_response(prompt)
+        response["citations"] = citations
         return response

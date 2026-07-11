@@ -4,7 +4,10 @@ from typing import Optional, List, BinaryIO
 from datetime import datetime, UTC
 from fastapi import UploadFile, HTTPException, status
 from sqlalchemy.orm import Session
-from . import get_document_repository, DocumentRepository
+from ..repositories.document_repository import (
+    DocumentRepository,
+    get_document_repository,
+)
 from .pdf import PDFService
 from ..storage import StorageInterface, get_storage
 from ..models.document import ProcessingStatus, Document
@@ -85,10 +88,60 @@ class DocumentService:
         db.refresh(doc)
 
         try:
-            # Extract text using PDFService
-            extracted_text, page_count, word_count, character_count = PDFService.extract_text_from_pdf(
-                doc.storage_path
-            )
+            # Extract text page-by-page
+            pages = PDFService.extract_pages_from_pdf(doc.storage_path)
+            extracted_text = "\n".join(p["text"] for p in pages)
+            page_count = len(pages)
+            word_count = len(extracted_text.split())
+            character_count = len(extracted_text)
+
+            # Chunk pages and prepare data
+            chunks_to_create = []
+            chunk_texts = []
+            chunk_size = 1000
+            overlap = 200
+
+            for page in pages:
+                page_num = page["page_number"]
+                page_text = page["text"]
+
+                if not page_text.strip():
+                    continue
+
+                if len(page_text) <= chunk_size:
+                    page_chunks = [page_text]
+                else:
+                    page_chunks = []
+                    start = 0
+                    while start < len(page_text):
+                        end = start + chunk_size
+                        page_chunks.append(page_text[start:end])
+                        start += chunk_size - overlap
+
+                for chunk_content in page_chunks:
+                    chunks_to_create.append({
+                        "page_number": page_num,
+                        "content": chunk_content
+                    })
+                    chunk_texts.append(chunk_content)
+
+            # Generate embeddings and add chunks to DB session
+            if chunk_texts:
+                from .ai.providers import get_ai_provider
+                from ..models.document_chunk import DocumentChunk
+                
+                ai_provider = get_ai_provider()
+                embeddings = ai_provider.get_embeddings(chunk_texts, task_type="retrieval_document")
+                
+                for i, chunk_data in enumerate(chunks_to_create):
+                    db_chunk = DocumentChunk(
+                        document_id=doc.id,
+                        page_number=chunk_data["page_number"],
+                        content=chunk_data["content"],
+                        embedding=embeddings[i]
+                    )
+                    db.add(db_chunk)
+
             # Update document with results
             doc_update = DocumentUpdate(
                 processing_status=ProcessingStatus.READY,
@@ -109,7 +162,7 @@ class DocumentService:
             db.commit()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to process document",
+                detail=f"Failed to process document: {str(e)}",
             )
         return DocumentResponse.model_validate(doc)
 

@@ -1,6 +1,6 @@
 import fitz
 from typing import Tuple
-from ..core.logging import get_logger
+from ...core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -31,6 +31,25 @@ class PDFService:
             return cleaned_text, page_count, word_count, character_count
         except Exception as e:
             logger.error(f"Failed to extract text from PDF: {e}")
+            raise e
+
+    @staticmethod
+    def extract_pages_from_pdf(pdf_path: str) -> list[dict]:
+        try:
+            doc = fitz.open(pdf_path)
+            pages = []
+            for i, page in enumerate(doc):
+                text = page.get_text()
+                cleaned = PDFService._clean_text(text)
+                if cleaned:
+                    pages.append({
+                        "page_number": i + 1,
+                        "text": cleaned
+                    })
+            doc.close()
+            return pages
+        except Exception as e:
+            logger.error(f"Failed to extract pages from PDF: {e}")
             raise e
 
     @staticmethod

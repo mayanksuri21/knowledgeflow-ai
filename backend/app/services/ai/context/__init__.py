@@ -1,5 +1,5 @@
-from .document_provider import DocumentContextProvider, SimpleDocumentContextProvider
+from .document_provider import DocumentContextProvider, RAGContextProvider
 
 
 def get_document_context_provider() -> DocumentContextProvider:
-    return SimpleDocumentContextProvider()
+    return RAGContextProvider()

@@ -52,7 +52,8 @@ class ChatService:
         return {
             "answer": ai_response["answer"],
             "document_id": document_id,
-            "usage": ai_response["usage"]
+            "usage": ai_response["usage"],
+            "citations": ai_response.get("citations", [])
         }
 
 

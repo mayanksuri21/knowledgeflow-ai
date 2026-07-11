@@ -14,7 +14,11 @@ from app.models.user import User
 config = context.config
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    try:
+        fileConfig(config.config_file_name)
+    except Exception:
+        import logging
+        logging.basicConfig(level=logging.INFO)
 
 settings = get_settings()
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
