@@ -1,12 +1,15 @@
 from typing import Optional
 from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from ..core.database import get_db
-from ..core.security import clerk_auth, security, HTTPAuthorizationCredentials
+from ..core.security import clerk_auth
 from ..models.user import User
-from ..repositories.user_repository import UserRepository, get_user_repository
+from ..repositories import get_user_repository, UserRepository
 from ..schemas.user import UserResponse
 from ..core.logging import get_logger
+
+security = HTTPBearer()
 
 logger = get_logger(__name__)
 

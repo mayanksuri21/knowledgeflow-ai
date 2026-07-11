@@ -56,6 +56,5 @@ class ChatService:
             "citations": ai_response.get("citations", [])
         }
 
-
 def get_chat_service() -> ChatService:
     return ChatService()

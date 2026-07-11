@@ -35,5 +35,6 @@ class DocumentRepository(BaseRepository[Document]):
             .filter(Document.id == document_id, Document.user_id == user_id)
             .first()
         )
+
 def get_document_repository() -> DocumentRepository:
     return DocumentRepository()

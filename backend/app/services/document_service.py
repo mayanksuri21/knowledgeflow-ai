@@ -127,7 +127,7 @@ class DocumentService:
 
             # Generate embeddings and add chunks to DB session
             if chunk_texts:
-                from .ai.providers import get_ai_provider
+                from ..ai.providers import get_ai_provider
                 from ..models.document_chunk import DocumentChunk
                 
                 ai_provider = get_ai_provider()
@@ -211,7 +211,6 @@ class DocumentService:
         db.delete(doc)
         db.commit()
         logger.info(f"Document deleted: {doc.id} by user {user_id}")
-
 
 def get_document_service() -> DocumentService:
     return DocumentService()

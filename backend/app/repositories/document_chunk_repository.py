@@ -22,5 +22,6 @@ class DocumentChunkRepository(BaseRepository[DocumentChunk]):
         db.commit()
         return db_objs
 
+
 def get_document_chunk_repository() -> DocumentChunkRepository:
     return DocumentChunkRepository()

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from ..deps import get_db, get_current_user
 from ...core.logging import get_logger
-from ...services.user_service import UserService
+from ...services import UserService, get_user_service
 from ...schemas.user import UserResponse
 from ...models.user import User
 
@@ -23,7 +23,7 @@ class SyncUserRequest(BaseModel):
 async def sync_user(
     request: SyncUserRequest,
     db: Session = Depends(get_db),
-    user_service: UserService = Depends()
+    user_service: UserService = Depends(get_user_service)
 ):
     user = user_service.get_or_create_user(
         db,

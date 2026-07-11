@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple, List, Dict, Any
 from sqlalchemy.orm import Session
-from ....repositories import DocumentRepository, get_document_repository
-from ....repositories.document_chunk_repository import get_document_chunk_repository, DocumentChunkRepository
+from ....repositories import DocumentRepository, get_document_repository, DocumentChunkRepository, get_document_chunk_repository
 from ..providers import get_ai_provider, AIProvider
 
 
