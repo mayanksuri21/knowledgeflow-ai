@@ -11,9 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Upload, Trash2, FileText, Cpu } from "lucide-react"
+import { Upload, Trash2, FileText, Cpu, MessageSquare } from "lucide-react"
 import { Document } from "@/types"
 import { useApi } from "@/hooks/useApi"
+import Link from "next/link"
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes"
@@ -204,20 +205,32 @@ export default function DocumentsPage() {
                   </TableCell>
                   <TableCell>{formatDate(doc.created_at)}</TableCell>
                   <TableCell className="text-right flex gap-2 justify-end">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleProcess(doc.id)}
-                      disabled={
-                        doc.processing_status === "processing" ||
-                        doc.processing_status === "ready" ||
-                        processingIds.has(doc.id)
-                      }
-                      className="flex items-center gap-1"
-                    >
-                      <Cpu className="h-3 w-3" />
-                      {processingIds.has(doc.id) ? "Processing..." : "Process"}
-                    </Button>
+                    {doc.processing_status === "ready" ? (
+                      <Link href={`/chat?documentId=${doc.id}`}>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="flex items-center gap-1 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 dark:bg-green-950/30 dark:text-green-400 dark:hover:bg-green-900/40"
+                        >
+                          <MessageSquare className="h-3 w-3" />
+                          Chat
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleProcess(doc.id)}
+                        disabled={
+                          doc.processing_status === "processing" ||
+                          processingIds.has(doc.id)
+                        }
+                        className="flex items-center gap-1"
+                      >
+                        <Cpu className="h-3 w-3" />
+                        {processingIds.has(doc.id) ? "Processing..." : "Process"}
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
