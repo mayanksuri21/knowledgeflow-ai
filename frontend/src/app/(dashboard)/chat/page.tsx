@@ -19,9 +19,15 @@ import {
   FolderOpen
 } from "lucide-react"
 
+interface Citation {
+  page_number: number
+  content: string
+}
+
 interface Message {
   role: "user" | "model"
   content: string
+  citations?: Citation[]
 }
 
 function ChatContent() {
@@ -83,12 +89,12 @@ function ChatContent() {
     setIsSending(true)
 
     try {
-      const response = await fetchApi<{ answer: string }>(`/api/v1/chat/${selectedDocId}`, {
+      const response = await fetchApi<{ answer: string; citations?: Citation[] }>(`/api/v1/chat/${selectedDocId}`, {
         method: "POST",
         body: JSON.stringify({ question: userMessage })
       })
 
-      setMessages(prev => [...prev, { role: "model", content: response.answer }])
+      setMessages(prev => [...prev, { role: "model", content: response.answer, citations: response.citations }])
     } catch (err) {
       console.error("Failed to get chat response:", err)
       setError("Failed to get a response from Gemini. Please try again.")
@@ -239,7 +245,20 @@ function ChatContent() {
                       : "bg-card border text-foreground rounded-tl-none max-w-[80%]"
                   }`}
                 >
-                  {message.content}
+                  <div>{message.content}</div>
+                  {message.role === "model" && message.citations && message.citations.length > 0 && (
+                    <div className="mt-3 pt-2.5 border-t border-indigo-100 dark:border-zinc-800 text-xs text-muted-foreground space-y-1.5">
+                      <span className="font-semibold text-indigo-600 dark:text-indigo-400 block">Sources & Citations:</span>
+                      <div className="space-y-2">
+                        {message.citations.map((citation, idx) => (
+                          <div key={idx} className="bg-muted/40 p-2 rounded border border-muted-foreground/10">
+                            <span className="font-bold text-foreground block mb-0.5">Page {citation.page_number}</span>
+                            <p className="italic leading-relaxed">&quot;{citation.content}&quot;</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {message.role === "user" && (
