@@ -20,7 +20,15 @@ async def get_current_user(
     user_repo: UserRepository = Depends(get_user_repository)
 ) -> User:
     token = credentials.credentials
+
+    print("=" * 80)
+    print("TOKEN RECEIVED")
+    print(token[:100])
+    print("=" * 80)
+
     payload = clerk_auth.verify_token(token)
+
+    print("PAYLOAD:", payload)
     clerk_id = payload.get("sub")
     if not clerk_id:
         raise HTTPException(

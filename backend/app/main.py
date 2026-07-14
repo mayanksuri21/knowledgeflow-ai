@@ -29,7 +29,10 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["documents"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
 
-
+print("\n========== REGISTERED ROUTES ==========")
+for route in app.routes:
+    print(route.path, route.methods)
+print("=======================================\n")
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting up application", app_name=settings.APP_NAME, version=settings.APP_VERSION)

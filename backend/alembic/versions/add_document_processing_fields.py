@@ -8,7 +8,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "add_document_processing_fields"
-down_revision = "add_documents_table"
+down_revision = "add_documents"
 branch_labels = None
 depends_on = None
 
