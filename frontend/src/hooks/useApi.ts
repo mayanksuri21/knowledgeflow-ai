@@ -9,7 +9,9 @@ export function useApi() {
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {
-    const token = await getToken()
+    const token = await getToken({
+      template: "backend",
+    })
 
     const headers = new Headers(options.headers || {})
     if (token) {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "@/styles/globals.css";
+import SyncUser from "@/components/SyncUser";
 
 export const metadata: Metadata = {
   title: "KnowledgeFlow AI",
@@ -15,8 +16,12 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body>{children}</body>
+        <body>
+          <SyncUser />
+          {children}
+        </body>
       </html>
     </ClerkProvider>
   );
 }
+

@@ -7,7 +7,9 @@ async function fetchApi<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const { getToken } = auth()
-  const token = await getToken()
+  const token = await getToken({
+    template: "backend",
+  })
 
   const headers = new Headers(options.headers || {})
   if (token) {
